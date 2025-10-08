@@ -466,7 +466,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                 
                 {/* Tab Navigation */}
                 <aside className="lg:w-56 flex-shrink-0">
-                    <nav className="flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto pb-2 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <nav className="flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto pb-2 lg:pb-0 custom-scrollbar">
                         {tabs.map(tab => (
                              <button
                                 key={tab}
@@ -480,7 +480,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                 </aside>
 
                 {/* Settings Panel (scrollable area) */}
-                <main className="flex-1 min-w-0 overflow-y-auto pr-2">
+                <main className="flex-1 min-w-0 overflow-y-auto pr-2 custom-scrollbar">
                     {renderSettingsPanel()}
                 </main>
             </div>

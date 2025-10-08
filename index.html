@@ -47,6 +47,23 @@
             animation: table-row-in 0.5s ease-out forwards;
             opacity: 0;
         }
+
+        /* Custom Scrollbar Styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px; /* For vertical scrollbars */
+            height: 8px; /* For horizontal scrollbars */
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background-color: rgb(30 41 59 / 0.5); /* slate-800/50 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgb(51 65 85); /* slate-700 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: rgb(71 85 105); /* slate-600 */
+        }
     </style>
 <script type="importmap">
 {
