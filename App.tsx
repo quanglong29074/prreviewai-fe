@@ -71,7 +71,7 @@ const App: React.FC = () => {
     );
 
     return (
-        <div className="relative h-screen bg-slate-900/50 text-white overflow-hidden">
+        <div className="relative h-screen bg-slate-900/50 text-white">
             <aside 
                 className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform duration-300 ease-in-out md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} 
                 aria-label="Sidebar"
@@ -121,7 +121,7 @@ const App: React.FC = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 overflow-y-auto transition-all duration-300 ease-in-out md:ml-64">
+            <main className="h-full overflow-y-auto transition-all duration-300 ease-in-out md:ml-64">
                  <div className="sticky top-0 z-30 md:hidden p-2 bg-slate-900/50 backdrop-blur-sm">
                     <button
                         onClick={() => setIsSidebarOpen(true)}

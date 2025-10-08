@@ -440,7 +440,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
     
     const tabs: Tab[] = ['General', 'Auto Review', 'Review', 'Chat', 'Code Generation', 'Finishing Touches', 'Knowledge Base', 'Tools'];
 
-    const renderPageContent = () => {
+    const renderSettingsPanel = () => {
         if (loading) {
             return <div className="flex justify-center items-center h-96"><Spinner /></div>;
         }
@@ -449,10 +449,24 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
             return <div className="text-center py-10 text-red-400 bg-red-900/50 rounded-lg p-4">{error}</div>;
         }
 
-        return (
-             <div className="flex flex-col lg:flex-row gap-8">
-                <aside className="lg:w-56">
-                    <nav className="flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0">
+        return renderTabContent();
+    };
+
+    return (
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* Page Header (non-scrolling part) */}
+            <div className="p-4 sm:p-6 md:p-8 pb-4 flex-shrink-0">
+                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2 transition-colors">&larr; Back to Repositories</button>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-2 break-words">{repository.full_name}</h1>
+                <p className="text-slate-400">Manage settings for your repository.</p>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-grow flex flex-col lg:flex-row gap-8 px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 overflow-hidden">
+                
+                {/* Tab Navigation */}
+                <aside className="lg:w-56 flex-shrink-0">
+                    <nav className="flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto pb-2 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {tabs.map(tab => (
                              <button
                                 key={tab}
@@ -464,21 +478,12 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                         ))}
                     </nav>
                 </aside>
-                <main className="flex-1 min-w-0">
-                    {renderTabContent()}
+
+                {/* Settings Panel (scrollable area) */}
+                <main className="flex-1 min-w-0 overflow-y-auto pr-2">
+                    {renderSettingsPanel()}
                 </main>
             </div>
-        );
-    };
-
-    return (
-        <div className="p-4 sm:p-6 md:p-8">
-            <div className="mb-8">
-                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2 transition-colors">&larr; Back to Repositories</button>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-2 break-words">{repository.full_name}</h1>
-                <p className="text-slate-400">Manage settings for your repository.</p>
-            </div>
-            {renderPageContent()}
         </div>
     );
 };
