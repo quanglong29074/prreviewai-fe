@@ -2,6 +2,7 @@ export enum Page {
   DASHBOARD = 'Dashboard',
   REPOSITORIES = 'Repositories',
   REPOSITORY_SETTINGS = 'Repository Settings',
+  PROFILE = 'Profile',
 }
 
 export interface Repository {
@@ -26,6 +27,14 @@ export interface PullRequestSummary {
   created_at: string;
   updated_at: string;
 }
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar_url: string;
+}
+
 
 // --- Enums from SQL Schema ---
 export enum ActiveStatus {

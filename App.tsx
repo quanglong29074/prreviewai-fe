@@ -1,14 +1,43 @@
-import React, { useState } from 'react';
-import { Page, Repository } from './types';
+import React, { useState, useEffect } from 'react';
+import { Page, Repository, User } from './types';
 import DashboardPage from './pages/DashboardPage';
 import RepositoriesPage from './pages/RepositoriesPage';
 import RepositorySettingsPage from './pages/RepositorySettingsPage';
-import { DashboardIcon, RepoIcon, HelpIcon, MenuIcon, CloseIcon, SyncIcon } from './components/icons';
+import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/LoginPage';
+import { DashboardIcon, RepoIcon, HelpIcon, MenuIcon, CloseIcon, SyncIcon, UserIcon } from './components/icons';
 
 const App: React.FC = () => {
-    const [currentPage, setCurrentPage] = useState<Page>(Page.DASHBOARD);
+    const [user, setUser] = useState<User | null>(null);
+    const [currentPage, setCurrentPage] = useState<Page>(Page.REPOSITORIES);
     const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    useEffect(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            const token = localStorage.getItem('jwt');
+            if (storedUser && token) {
+                setUser(JSON.parse(storedUser));
+            }
+        } catch (error) {
+            console.error("Failed to parse user from localStorage", error);
+            localStorage.clear();
+        } finally {
+            setIsInitialized(true);
+        }
+    }, []);
+
+    const handleLoginSuccess = (loggedInUser: User) => {
+        setUser(loggedInUser);
+        setCurrentPage(Page.REPOSITORIES);
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        setUser(null);
+    };
 
     const handleNavigateToSettings = (repo: Repository) => {
         setSelectedRepo(repo);
@@ -27,6 +56,8 @@ const App: React.FC = () => {
     };
     
     const renderPage = (): React.ReactNode => {
+        if (!user) return null; // Should not happen if logic is correct
+
         switch (currentPage) {
             case Page.DASHBOARD:
                 return <DashboardPage />;
@@ -39,8 +70,10 @@ const App: React.FC = () => {
                 // Fallback if no repo is selected
                 handlePageChange(Page.REPOSITORIES);
                 return <RepositoriesPage onNavigateToSettings={handleNavigateToSettings} />;
+            case Page.PROFILE:
+                return <ProfilePage user={user} onLogout={handleLogout} />;
             default:
-                return <DashboardPage />;
+                return <RepositoriesPage onNavigateToSettings={handleNavigateToSettings} />;
         }
     };
     
@@ -70,6 +103,14 @@ const App: React.FC = () => {
         </li>
     );
 
+    if (!isInitialized) {
+        return <div className="h-screen w-screen bg-slate-900" />; // Or a proper loading screen
+    }
+
+    if (!user) {
+        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    }
+
     return (
         <div className="relative h-screen bg-slate-900/50 text-white">
             <aside 
@@ -94,6 +135,7 @@ const App: React.FC = () => {
                         <ul className="space-y-2">
                            <NavItem page={Page.DASHBOARD} icon={<DashboardIcon />} label={Page.DASHBOARD} isActive={currentPage === Page.DASHBOARD} onClick={handlePageChange} />
                            <NavItem page={Page.REPOSITORIES} icon={<RepoIcon />} label={Page.REPOSITORIES} isActive={currentPage === Page.REPOSITORIES || currentPage === Page.REPOSITORY_SETTINGS} onClick={handlePageChange} />
+                           <NavItem page={Page.PROFILE} icon={<UserIcon />} label={Page.PROFILE} isActive={currentPage === Page.PROFILE} onClick={handlePageChange} />
                         </ul>
                          <div className="mt-4 px-2">
                              <button className="w-full flex items-center justify-center p-2.5 text-sm font-semibold rounded-lg bg-sky-600/50 text-sky-200 hover:bg-sky-600/80 hover:text-white transition-all duration-200">
@@ -104,13 +146,13 @@ const App: React.FC = () => {
                     </div>
                     <div className="pt-4 mt-4 border-t border-slate-700/50">
                         <div className="px-3 mb-4">
-                             <div className="flex items-center p-2 bg-slate-800/50 rounded-lg">
-                                <img className="h-10 w-10 rounded-full" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" />
-                                <div className="ml-3">
-                                    <p className="text-sm font-semibold text-white">Admin User</p>
+                             <button onClick={() => handlePageChange(Page.PROFILE)} className="flex w-full items-center p-2 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
+                                <img className="h-10 w-10 rounded-full" src={user.avatar_url} alt="User" />
+                                <div className="ml-3 text-left">
+                                    <p className="text-sm font-semibold text-white">{user.name}</p>
                                     <p className="text-xs text-green-400">Online</p>
                                 </div>
-                            </div>
+                            </button>
                         </div>
                         <a href="#" className="flex items-center p-3 text-sm text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors group">
                             <HelpIcon />
