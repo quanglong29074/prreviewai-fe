@@ -124,7 +124,7 @@ interface RepositorySettingsPageProps {
 type Tab = 'General' | 'Auto Review' | 'Review' | 'Chat' | 'Code Generation' | 'Finishing Touches' | 'Knowledge Base' | 'Tools';
 
 const SettingsSection: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
-    <div className="bg-slate-800/50 rounded-lg shadow-lg p-6 mb-6">
+    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl shadow-lg p-6 mb-6">
         <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
         <p className="text-sm text-slate-400 mb-6">{description}</p>
         <div className="space-y-4">
@@ -143,14 +143,14 @@ const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ ti
 );
 
 const Toggle: React.FC<{ label: string; checked: boolean; description?: string }> = ({ label, checked, description }) => (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between p-3 bg-slate-900/40 rounded-lg">
         <div>
             <label className="font-medium text-white">{label}</label>
-            {description && <p className="text-xs text-slate-400">{description}</p>}
+            {description && <p className="text-xs text-slate-400 max-w-xs">{description}</p>}
         </div>
         <button
             type="button"
-            className={`${checked ? 'bg-sky-600' : 'bg-slate-600'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors cursor-not-allowed opacity-50`}
+            className={`${checked ? 'bg-sky-600' : 'bg-slate-600'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors cursor-not-allowed opacity-60`}
             role="switch"
             aria-checked={checked}
             disabled
@@ -168,7 +168,7 @@ const TextInput: React.FC<{ label: string; value: string | null | number; placeh
             type={type}
             value={value ?? ''}
             placeholder={placeholder}
-            className="w-full bg-slate-700 border-slate-600 rounded-md shadow-sm text-white placeholder-slate-400 focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed"
+            className="w-full bg-slate-700/50 border-slate-600 rounded-md shadow-sm text-white placeholder-slate-400 focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-800/60 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-700"
             disabled
         />
     </div>
@@ -179,10 +179,10 @@ const SelectInput: React.FC<{ label: string; value: string; options: string[] }>
         <label className="block text-sm font-medium text-white mb-1">{label}</label>
         <select
             value={value}
-            className="w-full bg-slate-700 border-slate-600 rounded-md shadow-sm text-white focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed"
+            className="w-full bg-slate-700/50 border-slate-600 rounded-md shadow-sm text-white focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-800/60 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-700"
             disabled
         >
-            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            {options.map(opt => <option key={opt} value={opt}>{opt.charAt(0) + opt.slice(1).toLowerCase().replace(/_/g, ' ')}</option>)}
         </select>
     </div>
 );
@@ -238,16 +238,12 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
 
                 const results = await Promise.all(promises);
                 
-                // Create a fresh settings object based on a deep copy of defaults to avoid stale state
                 const newSettingsState = JSON.parse(JSON.stringify(defaultSettings));
 
                 results.forEach((data, index) => {
                     const type = settingTypes[index];
                     const stateKey = typeToStateKey[type];
-                    // Ensure data is a valid object before merging to prevent errors
                     if (stateKey && data && typeof data === 'object') {
-                        // Merge fetched settings over the defaults for that specific category
-                        // This ensures all fields are present, even if not returned by the API
                         newSettingsState[stateKey] = { ...newSettingsState[stateKey], ...data };
                     }
                 });
@@ -378,7 +374,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                         <SubSection title="LanguageTool">
                              <Toggle label="Enable LanguageTool" checked={settings.tools.enable_language_tool} description="Check for grammar and style in text files." />
                              {settings.tools.enable_language_tool && (
-                                <div className="pl-4 border-l-2 border-slate-600 mt-4 space-y-4">
+                                <div className="pl-4 border-l-2 border-slate-700 mt-4 space-y-4">
                                      <TextInput label="Enabled Rules" value={settings.tools.enabled_rules} placeholder="COMMA_SEPARATED_RULES" />
                                      <TextInput label="Disabled Rules" value={settings.tools.disabled_rules} placeholder="COMMA_SEPARATED_RULES" />
                                      <TextInput label="Enabled Categories" value={settings.tools.enabled_categories} placeholder="COMMA_SEPARATED_CATEGORIES" />
@@ -394,6 +390,25 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                         </SubSection>
                         <SubSection title="Linters & Security Scanners">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                <Toggle label="ESLint (JS/TS)" checked={settings.tools.enable_es_lint} />
+                                <Toggle label="Ruff (Python)" checked={settings.tools.enable_ruff} />
+                                <Toggle label="RuboCop (Ruby)" checked={settings.tools.enable_rubo_cop} />
+                                <Toggle label="ShellCheck" checked={settings.tools.enable_shell_check} />
+                                <Toggle label="Markdownlint" checked={settings.tools.enable_markdownlint} />
+                                <Toggle label="Biome (JS/TS/JSON)" checked={settings.tools.enable_biome} />
+                                <Toggle label="Hadolint (Dockerfile)" checked={settings.tools.enable_hadolint} />
+                                <Toggle label="YAML Lint" checked={settings.tools.enable_yaml_lint} />
+                                <Toggle label="Gitleaks (Secrets)" checked={settings.tools.enable_gitleaks} />
+                                <Toggle label="Checkov (IaC)" checked={settings.tools.enable_checkov} />
+                                <Toggle label="Buf (Protobuf)" checked={settings.tools.enable_buf} />
+                                <Toggle label="Regal (Rego)" checked={settings.tools.enable_regal} />
+                                <Toggle label="Actionlint (GH Actions)" checked={settings.tools.enable_actionlint} />
+                                <Toggle label="CppCheck" checked={settings.tools.enable_cpp_check} />
+                                <Toggle label="CircleCI" checked={settings.tools.enable_circle_ci} />
+                                <Toggle label="SQLFluff" checked={settings.tools.enable_sql_fluff} />
+                                <Toggle label="Prisma Schema Linting" checked={settings.tools.enable_prisma_schema_linting} />
+                                <Toggle label="Oxc (JS/TS)" checked={settings.tools.enable_oxc} />
+                                <Toggle label="Shopify Theme Check" checked={settings.tools.enable_shopify_theme_check} />
                                 <div>
                                     <Toggle label="GolangCI Lint" checked={settings.tools.enable_golangci_lint} />
                                     {settings.tools.enable_golangci_lint && <TextInput label="Config File" value={settings.tools.config_file} placeholder=".golangci.yml" />}
@@ -414,25 +429,6 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                                     <Toggle label="Semgrep" checked={settings.tools.enable_semgrep} />
                                     {settings.tools.enable_semgrep && <TextInput label="Config File" value={settings.tools.config_file_semgrep} placeholder=".semgrep.yml" />}
                                 </div>
-                                <Toggle label="ESLint (JS/TS)" checked={settings.tools.enable_es_lint} />
-                                <Toggle label="Ruff (Python)" checked={settings.tools.enable_ruff} />
-                                <Toggle label="RuboCop (Ruby)" checked={settings.tools.enable_rubo_cop} />
-                                <Toggle label="ShellCheck" checked={settings.tools.enable_shell_check} />
-                                <Toggle label="Markdownlint" checked={settings.tools.enable_markdownlint} />
-                                <Toggle label="Biome (JS/TS/JSON)" checked={settings.tools.enable_biome} />
-                                <Toggle label="Hadolint (Dockerfile)" checked={settings.tools.enable_hadolint} />
-                                <Toggle label="YAML Lint" checked={settings.tools.enable_yaml_lint} />
-                                <Toggle label="Gitleaks (Secrets)" checked={settings.tools.enable_gitleaks} />
-                                <Toggle label="Checkov (IaC)" checked={settings.tools.enable_checkov} />
-                                <Toggle label="Buf (Protobuf)" checked={settings.tools.enable_buf} />
-                                <Toggle label="Regal (Rego)" checked={settings.tools.enable_regal} />
-                                <Toggle label="Actionlint (GH Actions)" checked={settings.tools.enable_actionlint} />
-                                <Toggle label="CppCheck" checked={settings.tools.enable_cpp_check} />
-                                <Toggle label="CircleCI" checked={settings.tools.enable_circle_ci} />
-                                <Toggle label="SQLFluff" checked={settings.tools.enable_sql_fluff} />
-                                <Toggle label="Prisma Schema Linting" checked={settings.tools.enable_prisma_schema_linting} />
-                                <Toggle label="Oxc (JS/TS)" checked={settings.tools.enable_oxc} />
-                                <Toggle label="Shopify Theme Check" checked={settings.tools.enable_shopify_theme_check} />
                             </div>
                         </SubSection>
                     </SettingsSection>
@@ -454,21 +450,21 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
         }
 
         return (
-             <div className="flex flex-col md:flex-row gap-8">
-                <aside className="md:w-1/4 lg:w-1/5">
-                    <nav className="flex flex-col space-y-1">
+             <div className="flex flex-col lg:flex-row gap-8">
+                <aside className="lg:w-56">
+                    <nav className="flex flex-row lg:flex-col lg:space-y-1 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0">
                         {tabs.map(tab => (
                              <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab ? 'bg-sky-600 text-white' : 'text-slate-300 hover:bg-slate-700'}`}
+                                className={`text-left px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 flex-shrink-0 ${activeTab === tab ? 'bg-sky-600 text-white shadow-md' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}`}
                             >
                                 {tab}
                             </button>
                         ))}
                     </nav>
                 </aside>
-                <main className="flex-1">
+                <main className="flex-1 min-w-0">
                     {renderTabContent()}
                 </main>
             </div>
@@ -476,13 +472,11 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
     };
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2">&larr; Back to Repositories</button>
-                    <h1 className="text-3xl font-bold text-white">{repository.full_name}</h1>
-                    <p className="text-slate-400">Manage settings for your repository.</p>
-                </div>
+        <div className="p-4 sm:p-6 md:p-8">
+            <div className="mb-8">
+                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2 transition-colors">&larr; Back to Repositories</button>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-2 break-words">{repository.full_name}</h1>
+                <p className="text-slate-400">Manage settings for your repository.</p>
             </div>
             {renderPageContent()}
         </div>

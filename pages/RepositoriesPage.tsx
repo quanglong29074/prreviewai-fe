@@ -16,7 +16,6 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
         const fetchRepositories = async () => {
             try {
                 const token = localStorage.getItem('jwt');
-                console.log(token)
                 if (!token) {
                     setError("Authentication token not found. Please log in to view repositories.");
                     setLoading(false);
@@ -65,28 +64,39 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
         }
 
         if (repositories.length === 0) {
-            return <div className="text-center py-10 text-slate-400">No repositories found.</div>;
+            return (
+                 <div className="text-center py-20 text-slate-400 bg-slate-800/50 border border-slate-700/50 rounded-xl">
+                    <p className="text-lg">No Repositories Found</p>
+                    <p className="text-sm text-slate-500 mt-2">Connect your GitHub account to see your repositories.</p>
+                </div>
+            );
         }
 
         return (
-            <div className="bg-slate-800/50 rounded-lg shadow-lg overflow-x-auto">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 overflow-x-auto">
                 <table className="min-w-full">
-                    <thead className="bg-slate-800">
+                    <thead className="bg-slate-900/50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Description</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Description</th>
+                            <th className="px-6 py-3 text-right text-xs font-semibold text-slate-300 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-700">
-                        {repositories.map(repo => (
-                            <tr key={repo.id} className="hover:bg-slate-800 transition-colors duration-150">
+                    <tbody className="divide-y divide-slate-800">
+                        {repositories.map((repo, index) => (
+                            <tr 
+                                key={repo.id} 
+                                className="hover:bg-slate-700/50 transition-all duration-200 hover:shadow-lg hover:-translate-y-px animate-table-row"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-sky-400 transition-colors">
-                                        {repo.full_name}
-                                    </a>
-                                     <div className={`text-xs inline-block ml-2 px-2 py-0.5 rounded-full ${repo.private ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
-                                        {repo.private ? 'Private' : 'Public'}
+                                    <div className="flex items-center">
+                                        <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-sky-400 transition-colors">
+                                            {repo.full_name}
+                                        </a>
+                                        <div className={`text-xs inline-block ml-3 px-2 py-0.5 rounded-full border ${repo.private ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-green-500/10 text-green-300 border-green-500/20'}`}>
+                                            {repo.private ? 'Private' : 'Public'}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 max-w-md truncate">
@@ -95,10 +105,12 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button
                                         onClick={() => onNavigateToSettings(repo)}
-                                        className="text-slate-400 hover:text-sky-400 p-2 rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500"
+                                        className="text-slate-400 hover:text-sky-400 p-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-sky-500 group"
                                         aria-label={`Settings for ${repo.name}`}
                                     >
-                                        <SettingsIcon />
+                                        <div className="group-hover:rotate-90 transition-transform duration-300">
+                                            <SettingsIcon />
+                                        </div>
                                     </button>
                                 </td>
                             </tr>
@@ -110,8 +122,8 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
     }
 
     return (
-        <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6 text-white">Repositories</h1>
+        <div className="p-4 sm:p-6 md:p-8">
+            <h1 className="text-3xl sm:text-4xl font-extrabold mb-8 text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-2">Repositories</h1>
             {renderContent()}
         </div>
     );
