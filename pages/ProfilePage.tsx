@@ -1,83 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { User } from '../types';
 import { LogoutIcon } from '../components/icons';
-import Spinner from '../components/Spinner';
 
 interface ProfilePageProps {
     user: User;
     onLogout: () => void;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ user: initialUser, onLogout }) => {
-    const [user, setUser] = useState<User | null>(initialUser);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            setLoading(true);
-            setError(null);
-            const token = localStorage.getItem('jwt');
-            if (!token) {
-                onLogout(); // No token, session is invalid
-                return;
-            }
-
-            try {
-                const response = await fetch('http://localhost:3000/api/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const userData: User = await response.json();
-                    setUser(userData);
-                    // Update localStorage to keep it in sync for the next app load
-                    localStorage.setItem('user', JSON.stringify(userData));
-                } else {
-                    if (response.status === 401) {
-                        // Unauthorized, token is invalid or expired.
-                        onLogout();
-                    } else {
-                        throw new Error(`Failed to fetch user data. Status: ${response.status}`);
-                    }
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    setError(e.message);
-                } else {
-                    setError("An unknown error occurred while fetching user data.");
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUserData();
-    }, [onLogout]);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center p-8">
-                <Spinner />
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="p-8">
-                 <div className="max-w-2xl mx-auto text-center py-10 text-red-400 bg-red-900/50 rounded-lg m-4 p-4">
-                    <h2 className="text-xl font-bold mb-2">Error Loading Profile</h2>
-                    <p>{error}</p>
-                </div>
-            </div>
-        );
-    }
+const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
     
     if (!user) {
-        return <div className="p-8 text-center text-slate-400">User data not available.</div>;
+        // This should not happen if App.tsx handles the session correctly, but it's a good safeguard.
+        return <div className="p-8 text-center text-slate-400">User data not available. Please try logging in again.</div>;
     }
 
     return (

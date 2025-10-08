@@ -14,34 +14,43 @@ const App: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
-    useEffect(() => {
-        const initializeUserFromStorage = () => {
-            const token = localStorage.getItem('jwt');
-            const storedUser = localStorage.getItem('user');
+    const handleLogout = () => {
+        localStorage.clear();
+        setUser(null);
+    };
 
-            if (token && storedUser) {
+    const token = localStorage.getItem('jwt');
+    
+    useEffect(() => {
+        const initializeSession = async () => {
+            if (token) {
                 try {
-                    setUser(JSON.parse(storedUser));
+                    const response = await fetch('http://localhost:3000/api/auth/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    });
+                    if (response.ok) {
+                        const userData: User = await response.json();
+                        setUser(userData);
+                    } else {
+                        // Token is invalid/expired, log the user out
+                        handleLogout();
+                    }
                 } catch (error) {
-                    console.error("Failed to parse user from localStorage", error);
-                    localStorage.clear();
-                    setUser(null);
+                    console.error("Failed to initialize session:", error);
+                    handleLogout(); // Also logout on network errors
                 }
             }
             setIsInitialized(true);
         };
 
-        initializeUserFromStorage();
+        initializeSession();
     }, []);
 
     const handleLoginSuccess = (loggedInUser: User) => {
         setUser(loggedInUser);
         setCurrentPage(Page.REPOSITORIES);
-    };
-
-    const handleLogout = () => {
-        localStorage.clear();
-        setUser(null);
     };
 
     const handleNavigateToSettings = (repo: Repository) => {

@@ -18,15 +18,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             // and return user data and a JWT.
             const mockUser: User = {
                 id: 1,
-                username: 'jane_doe',
-                email: 'jane.doe@example.com',
-                avatar_url: `https://i.pravatar.cc/150?u=a042581f4e29026704d`,
+                username: 'quanglong290741111',
+                email: 'quanglong29074@gmail.com1111',
+                avatar_url: 'https://avatars.githubusercontent.com/u/114908074?v=411111',
             };
 
             const mockJwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTQ5MDgwNzQiLCJ1c2VybmFtZSI6InF1YW5nbG9uZzI5MDc0IiwiZXhwIjoxNzYyNDg1Mjg0fQ.IjRdHn7Bxfhdrhbub8TwzfdQZUhCoc_3iM1BvNu6nL0';
 
             localStorage.setItem('jwt', mockJwt);
-            localStorage.setItem('user', JSON.stringify(mockUser));
             
             onLoginSuccess(mockUser);
             setIsLoading(false);
