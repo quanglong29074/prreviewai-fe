@@ -30,7 +30,7 @@ export interface PullRequestSummary {
 
 export interface User {
   id: number;
-  name: string;
+  username: string;
   email: string;
   avatar_url: string;
 }

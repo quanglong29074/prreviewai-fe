@@ -15,18 +15,23 @@ const App: React.FC = () => {
     const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
-        try {
-            const storedUser = localStorage.getItem('user');
+        const initializeUserFromStorage = () => {
             const token = localStorage.getItem('jwt');
-            if (storedUser && token) {
-                setUser(JSON.parse(storedUser));
+            const storedUser = localStorage.getItem('user');
+
+            if (token && storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser));
+                } catch (error) {
+                    console.error("Failed to parse user from localStorage", error);
+                    localStorage.clear();
+                    setUser(null);
+                }
             }
-        } catch (error) {
-            console.error("Failed to parse user from localStorage", error);
-            localStorage.clear();
-        } finally {
             setIsInitialized(true);
-        }
+        };
+
+        initializeUserFromStorage();
     }, []);
 
     const handleLoginSuccess = (loggedInUser: User) => {
@@ -149,7 +154,7 @@ const App: React.FC = () => {
                              <button onClick={() => handlePageChange(Page.PROFILE)} className="flex w-full items-center p-2 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition-colors">
                                 <img className="h-10 w-10 rounded-full" src={user.avatar_url} alt="User" />
                                 <div className="ml-3 text-left">
-                                    <p className="text-sm font-semibold text-white">{user.name}</p>
+                                    <p className="text-sm font-semibold text-white">{user.username}</p>
                                     <p className="text-xs text-green-400">Online</p>
                                 </div>
                             </button>

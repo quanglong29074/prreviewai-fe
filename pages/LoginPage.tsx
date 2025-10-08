@@ -18,12 +18,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             // and return user data and a JWT.
             const mockUser: User = {
                 id: 1,
-                name: 'Jane Doe',
+                username: 'jane_doe',
                 email: 'jane.doe@example.com',
                 avatar_url: `https://i.pravatar.cc/150?u=a042581f4e29026704d`,
             };
 
-            const mockJwt = 'mock-jwt-token-for-demo-purposes';
+            const mockJwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTQ5MDgwNzQiLCJ1c2VybmFtZSI6InF1YW5nbG9uZzI5MDc0IiwiZXhwIjoxNzYyNDg1Mjg0fQ.IjRdHn7Bxfhdrhbub8TwzfdQZUhCoc_3iM1BvNu6nL0';
 
             localStorage.setItem('jwt', mockJwt);
             localStorage.setItem('user', JSON.stringify(mockUser));

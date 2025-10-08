@@ -18,6 +18,7 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(0);
     const [totalRepos, setTotalRepos] = useState<number>(0);
+    const token = localStorage.getItem('jwt');
 
     useEffect(() => {
         const fetchRepositories = async () => {
@@ -25,7 +26,6 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
             setError(null);
             
             try {
-                const token = localStorage.getItem('jwt');
                 if (!token) {
                     setError("Authentication token not found. Please log in to view repositories.");
                     setLoading(false);
@@ -66,7 +66,7 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
         };
 
         fetchRepositories();
-    }, []); // Only run once on component mount
+    }, [token]); // Only run once on component mount
 
     // This effect handles the client-side pagination logic
     useEffect(() => {
