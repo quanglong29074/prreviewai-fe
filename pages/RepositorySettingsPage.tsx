@@ -1,49 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Repository, AllRepositorySettings, ActiveStatus, ScopeStatus, ProfileSettingType, ToolLanguageLevelSetting, PhpStanLevelSetting } from '../types';
+import Spinner from '../components/Spinner';
 
-// Mock data for a single repository's settings. In a real app, this would be fetched.
-const initialSettings: AllRepositorySettings = {
+// Default settings structure to prevent errors before data is loaded.
+const defaultSettings: AllRepositorySettings = {
     general: {
-        review_language: 'en',
-        tone_instructions: 'Be friendly and encouraging.',
+        review_language: 'vi',
+        tone_instructions: '',
         early_access: false,
         enable_free_tier: true,
     },
     autoReview: {
         automatic_review: true,
         automatic_incremental_review: false,
-        ignore_title_keywords: 'WIP, DRAFT',
-        labels: 'needs-review',
+        ignore_title_keywords: '',
+        labels: '',
         drafts: false,
-        base_branches: 'main,develop',
+        base_branches: '',
     },
     chat: {
-        auto_reply: true,
-        create_issue: true,
-        jira: ActiveStatus.AUTO,
+        auto_reply: false,
+        create_issue: false,
+        jira: ActiveStatus.DISABLED,
         linear: ActiveStatus.DISABLED,
     },
     codeGeneration: {
-        code_generation_language: 'TypeScript',
-        path_instructions: 'Place all new components in src/components.',
-        unit_test_generation: 'Jest',
+        code_generation_language: '',
+        path_instructions: '',
+        unit_test_generation: '',
     },
     finishingTouches: {
-        docstrings: true,
-        unit_tests: true,
+        docstrings: false,
+        unit_tests: false,
     },
     knowledgeBase: {
         out_put: false,
-        web_search: true,
-        learnings: ScopeStatus.AUTO,
-        issues: ScopeStatus.ENABLED,
-        jira_project_keys: 'PROJ,CORE',
-        linear: ActiveStatus.AUTO,
-        linear_team_keys: 'ENG,DESIGN',
-        pull_requests: ScopeStatus.AUTO,
+        web_search: false,
+        learnings: ScopeStatus.DISABLED,
+        issues: ScopeStatus.DISABLED,
+        jira_project_keys: '',
+        linear: ActiveStatus.DISABLED,
+        linear_team_keys: '',
+        pull_requests: ScopeStatus.DISABLED,
     },
     review: {
-        path_instructions: 'Ignore all changes in the /dist folder.',
+        path_instructions: '',
         profile: ProfileSettingType.BALANCED,
         requests_changers_workflow: false,
         high_level_summary: true,
@@ -56,17 +57,17 @@ const initialSettings: AllRepositorySettings = {
         fail_commit_status: false,
         collapse_walkthrough: false,
         changed_files_summary: true,
-        sequence_diagrams: true,
-        assess_linked_issues: true,
-        related_issues: true,
-        related_prs: true,
-        suggested_labels: true,
+        sequence_diagrams: false,
+        assess_linked_issues: false,
+        related_issues: false,
+        related_prs: false,
+        suggested_labels: false,
         auto_apply_labels: false,
-        suggested_reviewers: true,
+        suggested_reviewers: false,
         auto_assign_reviewers: false,
         poem: false,
         labeling_instructions: null,
-        path_filters: '*.md,*.json',
+        path_filters: '',
         abort_on_close: false,
     },
     tools: {
@@ -94,14 +95,14 @@ const initialSettings: AllRepositorySettings = {
         enable_semgrep: false,
         config_file_semgrep: '',
         enable_shell_check: false,
-        enable_ruff: true,
-        enable_markdownlint: true,
+        enable_ruff: false,
+        enable_markdownlint: false,
         enable_biome: false,
         enable_hadolint: false,
-        enable_yaml_lint: true,
+        enable_yaml_lint: false,
         enable_gitleaks: false,
         enable_checkov: false,
-        enable_es_lint: true,
+        enable_es_lint: false,
         enable_rubo_cop: false,
         enable_buf: false,
         enable_regal: false,
@@ -189,8 +190,83 @@ const SelectInput: React.FC<{ label: string; value: string; onChange: (value: st
 
 
 const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ repository, onBack }) => {
-    const [settings, setSettings] = useState<AllRepositorySettings>(initialSettings);
+    const [settings, setSettings] = useState<AllRepositorySettings>(defaultSettings);
     const [activeTab, setActiveTab] = useState<Tab>('General');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            setLoading(true);
+            setError(null);
+
+            const token = localStorage.getItem('jwt');
+            if (!token) {
+                setError("Authentication token not found. Please log in.");
+                setLoading(false);
+                return;
+            }
+
+            const settingTypes = [
+                'general', 'auto_review', 'chat', 'code_generation', 
+                'finishing_touches', 'knowledge_base', 'review', 'tools'
+            ];
+
+            const typeToStateKey: { [key: string]: keyof AllRepositorySettings } = {
+                'general': 'general',
+                'auto_review': 'autoReview',
+                'chat': 'chat',
+                'code_generation': 'codeGeneration',
+                'finishing_touches': 'finishingTouches',
+                'knowledge_base': 'knowledgeBase',
+                'review': 'review',
+                'tools': 'tools'
+            };
+
+            try {
+                const promises = settingTypes.map(type =>
+                    fetch(`http://localhost:3000/api/repo-settings?repository_id=${repository.id}&type=${type}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(res => {
+                        if (!res.ok) {
+                            throw new Error(`Failed to fetch ${type} settings (status: ${res.status})`);
+                        }
+                        return res.json();
+                    })
+                );
+
+                const results = await Promise.all(promises);
+                
+                const newSettings: Partial<AllRepositorySettings> = {};
+                results.forEach((data, index) => {
+                    const type = settingTypes[index];
+                    const stateKey = typeToStateKey[type];
+                    if (stateKey && data) {
+                        newSettings[stateKey] = data;
+                    }
+                });
+                
+                // Merge fetched settings into the default structure to ensure all keys exist
+                setSettings(prev => ({
+                    ...prev,
+                    ...newSettings
+                }));
+
+            } catch (e) {
+                if (e instanceof Error) {
+                    setError(`Failed to load repository settings: ${e.message}`);
+                } else {
+                    setError('An unknown error occurred while fetching settings.');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (repository?.id) {
+            fetchSettings();
+        }
+    }, [repository.id]);
 
     const handleReviewChange = <K extends keyof AllRepositorySettings['review']>(key: K, value: AllRepositorySettings['review'][K]) => {
         setSettings(s => ({
@@ -223,7 +299,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
     };
 
 
-    const renderContent = () => {
+    const renderTabContent = () => {
         switch (activeTab) {
             case 'General':
                 return (
@@ -397,15 +473,17 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
     
     const tabs: Tab[] = ['General', 'Auto Review', 'Review', 'Chat', 'Code Generation', 'Finishing Touches', 'Knowledge Base', 'Tools'];
 
-    return (
-        <div className="p-8">
-            <div className="mb-6">
-                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2">&larr; Back to Repositories</button>
-                <h1 className="text-3xl font-bold text-white">{repository.full_name}</h1>
-                <p className="text-slate-400">Manage settings for your repository.</p>
-            </div>
+    const renderPageContent = () => {
+        if (loading) {
+            return <div className="flex justify-center items-center h-96"><Spinner /></div>;
+        }
 
-            <div className="flex flex-col md:flex-row gap-8">
+        if (error) {
+            return <div className="text-center py-10 text-red-400 bg-red-900/50 rounded-lg p-4">{error}</div>;
+        }
+
+        return (
+             <div className="flex flex-col md:flex-row gap-8">
                 <aside className="md:w-1/4 lg:w-1/5">
                     <nav className="flex flex-col space-y-1">
                         {tabs.map(tab => (
@@ -420,7 +498,7 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                     </nav>
                 </aside>
                 <main className="flex-1">
-                    {renderContent()}
+                    {renderTabContent()}
                     <div className="flex justify-end mt-8">
                         <button className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
                             Save Changes
@@ -428,6 +506,17 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                     </div>
                 </main>
             </div>
+        );
+    };
+
+    return (
+        <div className="p-8">
+            <div className="mb-6">
+                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2">&larr; Back to Repositories</button>
+                <h1 className="text-3xl font-bold text-white">{repository.full_name}</h1>
+                <p className="text-slate-400">Manage settings for your repository.</p>
+            </div>
+            {renderPageContent()}
         </div>
     );
 };

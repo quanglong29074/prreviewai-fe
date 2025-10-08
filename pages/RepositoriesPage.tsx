@@ -69,7 +69,7 @@ const RepositoriesPage: React.FC<RepositoriesPageProps> = ({ onNavigateToSetting
         }
 
         return (
-            <div className="bg-slate-800/50 rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-slate-800/50 rounded-lg shadow-lg overflow-x-auto">
                 <table className="min-w-full">
                     <thead className="bg-slate-800">
                         <tr>
