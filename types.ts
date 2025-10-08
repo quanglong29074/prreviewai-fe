@@ -14,6 +14,19 @@ export interface Repository {
   private: boolean;
 }
 
+export interface PullRequestSummary {
+  id: number;
+  user_id: number;
+  name: string;
+  url: string;
+  url_pull_request: string;
+  comments: number;
+  review_comments: number;
+  commits: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // --- Enums from SQL Schema ---
 export enum ActiveStatus {
     AUTO = 'AUTO',

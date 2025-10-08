@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { PullRequestSummary } from '../types';
+import Spinner from '../components/Spinner';
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
+const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode }> = ({ title, value, icon }) => (
     <div className="bg-slate-800/50 p-6 rounded-lg shadow-lg flex items-center space-x-4">
         <div className="bg-slate-700 p-3 rounded-full">
             {icon}
@@ -13,63 +15,153 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }
 );
 
 const DashboardPage: React.FC = () => {
+    const [summaries, setSummaries] = useState<PullRequestSummary[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSummaries = async () => {
+            try {
+                const token = localStorage.getItem('jwt');
+                if (!token) {
+                    setError("Authentication token not found. Please log in.");
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch('http://localhost:3000/api/pr-summary', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                     if (response.status === 401) {
+                        throw new Error("Your session has expired. Please log in again.");
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data: PullRequestSummary[] = await response.json();
+                setSummaries(data);
+            } catch (e) {
+                if (e instanceof Error) {
+                    setError(`Failed to fetch dashboard data: ${e.message}`);
+                } else {
+                    setError('An unknown error occurred.');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSummaries();
+    }, []);
+
+    const stats = useMemo(() => {
+        if (!summaries || summaries.length === 0) {
+            return {
+                totalPRs: 0,
+                totalCommits: 0,
+                totalComments: 0,
+                avgCommits: 0,
+            };
+        }
+
+        const totalPRs = summaries.length;
+        const totalCommits = summaries.reduce((sum, pr) => sum + (pr.commits || 0), 0);
+        const totalComments = summaries.reduce((sum, pr) => sum + (pr.comments || 0), 0);
+        const avgCommits = (totalCommits / totalPRs).toFixed(1);
+
+        return { totalPRs, totalCommits, totalComments, avgCommits };
+    }, [summaries]);
+
+    const renderContent = () => {
+        if (loading) {
+            return <Spinner />;
+        }
+        if (error) {
+            return <div className="text-center py-10 text-red-400 bg-red-900/50 rounded-lg m-4 p-4">{error}</div>;
+        }
+        if (summaries.length === 0) {
+            return <div className="text-center py-10 text-slate-400">No active pull requests found.</div>;
+        }
+
+        return (
+            <div className="bg-slate-800/50 rounded-lg shadow-lg overflow-x-auto">
+                <table className="min-w-full">
+                    <thead className="bg-slate-800">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Repository</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Pull Request</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">Commits</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">Comments</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                        {summaries.map(pr => {
+                            const prNumber = pr.url_pull_request.split('/').pop();
+                            return (
+                                <tr key={pr.id} className="hover:bg-slate-800 transition-colors duration-150">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <a href={pr.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-sky-400 transition-colors">
+                                            {pr.name}
+                                        </a>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                         <a href={pr.url_pull_request} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-300 hover:text-sky-400 transition-colors">
+                                            #{prNumber}
+                                        </a>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-300">{pr.commits}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-300">{pr.comments}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                        {new Date(pr.updated_at).toLocaleString()}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
     return (
         <div className="p-8">
             <h1 className="text-3xl font-bold mb-6 text-white">Dashboard</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Reviews" value="1,428" icon={<CodeIcon />} />
-                <StatCard title="Repositories" value="23" icon={<RepoIcon />} />
-                <StatCard title="Issues Found" value="312" icon={<WarningIcon />} />
-                <StatCard title="Success Rate" value="98.7%" icon={<CheckIcon />} />
+                <StatCard title="Active Pull Requests" value={stats.totalPRs} icon={<PullRequestIcon />} />
+                <StatCard title="Total Commits" value={stats.totalCommits} icon={<CommitsIcon />} />
+                <StatCard title="Total Comments" value={stats.totalComments} icon={<CommentsIcon />} />
+                <StatCard title="Avg. Commits / PR" value={stats.avgCommits} icon={<ChartIcon />} />
             </div>
-            <div className="mt-8 bg-slate-800/50 p-6 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-                <ul>
-                    <li className="flex justify-between items-center py-3 border-b border-slate-700">
-                        <div>
-                            <p className="font-semibold">review/feature-branch</p>
-                            <p className="text-sm text-slate-400">my-awesome-project</p>
-                        </div>
-                        <span className="text-sm text-green-400">Passed</span>
-                    </li>
-                    <li className="flex justify-between items-center py-3 border-b border-slate-700">
-                        <div>
-                            <p className="font-semibold">fix/login-bug</p>
-                            <p className="text-sm text-slate-400">internal-tools</p>
-                        </div>
-                        <span className="text-sm text-yellow-400">2 Issues</span>
-                    </li>
-                    <li className="flex justify-between items-center py-3">
-                        <div>
-                            <p className="font-semibold">refactor/api-service</p>
-                            <p className="text-sm text-slate-400">customer-portal-backend</p>
-                        </div>
-                        <span className="text-sm text-green-400">Passed</span>
-                    </li>
-                </ul>
+            <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Recent Pull Request Activity</h2>
+                {renderContent()}
             </div>
         </div>
     );
 };
 
-const CodeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+const PullRequestIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 8A5 5 0 008 8m-2 8v2a2 2 0 002 2h8a2 2 0 002-2v-2m-4-6l-4 4m0 0l4 4m-4-4h12" />
     </svg>
 );
-const RepoIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+const CommitsIcon: React.FC = () => (
+   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+     <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+   </svg>
+);
+const CommentsIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
     </svg>
 );
-const WarningIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-);
-const CheckIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+const ChartIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     </svg>
 );
 
