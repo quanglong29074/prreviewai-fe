@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Repository, AllRepositorySettings, ActiveStatus, ScopeStatus, ProfileSettingType, ToolLanguageLevelSetting, PhpStanLevelSetting } from '../types';
 import Spinner from '../components/Spinner';
 import toast from 'react-hot-toast';
+import LanguageSelect from '../components/LanguageSelect';
+import SelectInput from '../components/SelectInput';
+import SettingsSection from '../components/SettingsSection';
+import SubSection from '../components/SubSection';
+import Toggle from '../components/Toggle';
+import TextInput from '../components/TextInput';
 
 const defaultSettings: AllRepositorySettings = {
     general: {
@@ -122,70 +128,6 @@ interface RepositorySettingsPageProps {
 }
 
 type Tab = 'General' | 'Auto Review' | 'Review' | 'Chat' | 'Code Generation' | 'Finishing Touches' | 'Knowledge Base' | 'Tools';
-
-const SettingsSection: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
-    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl shadow-lg p-6 mb-6">
-        <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
-        <p className="text-sm text-slate-400 mb-6">{description}</p>
-        <div className="space-y-4">
-            {children}
-        </div>
-    </div>
-);
-
-const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="pt-4 border-t border-slate-700/50 first:border-t-0 first:pt-0">
-        <h4 className="text-lg font-semibold text-sky-300 mb-4">{title}</h4>
-        <div className="space-y-4">
-            {children}
-        </div>
-    </div>
-);
-
-const Toggle: React.FC<{ label: string; checked: boolean; description?: string; onChange: (checked: boolean) => void }> = ({ label, checked, description, onChange }) => (
-    <div className="flex items-center justify-between p-3 bg-slate-900/40 rounded-lg">
-        <div>
-            <label className="font-medium text-white">{label}</label>
-            {description && <p className="text-xs text-slate-400 max-w-xs">{description}</p>}
-        </div>
-        <button
-            type="button"
-            onClick={() => onChange(!checked)}
-            className={`${checked ? 'bg-sky-600' : 'bg-slate-600'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors cursor-pointer hover:opacity-80`}
-            role="switch"
-            aria-checked={checked}
-        >
-            <span className={`${checked ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
-        </button>
-    </div>
-);
-
-const TextInput: React.FC<{ label: string; value: string | null | number; placeholder?: string, description?: string, type?: string; onChange: (value: string) => void }> = ({ label, value, placeholder, description, type = 'text', onChange }) => (
-    <div>
-        <label className="block text-sm font-medium text-white mb-1">{label}</label>
-        {description && <p className="text-xs text-slate-400 mb-2">{description}</p>}
-        <input
-            type={type}
-            value={value ?? ''}
-            placeholder={placeholder}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-md shadow-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 px-3 py-2"
-        />
-    </div>
-);
-
-const SelectInput: React.FC<{ label: string; value: string; options: string[]; onChange: (value: string) => void }> = ({ label, value, options, onChange }) => (
-    <div>
-        <label className="block text-sm font-medium text-white mb-1">{label}</label>
-        <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-md shadow-sm text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 px-3 py-2"
-        >
-            {options.map(opt => <option key={opt} value={opt}>{opt.charAt(0) + opt.slice(1).toLowerCase().replace(/_/g, ' ')}</option>)}
-        </select>
-    </div>
-);
 
 const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ repository, onBack }) => {
     const [settings, setSettings] = useState<AllRepositorySettings>(defaultSettings);
@@ -358,7 +300,11 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
             case 'General':
                 return (
                     <SettingsSection title="General Settings" description="Configure basic repository settings.">
-                        <SelectInput label="Review Language" value={settings.general.review_language} options={['en', 'es', 'fr', 'de', 'vi']} onChange={(v) => updateSetting('general', 'review_language', v)} />
+                        <LanguageSelect
+  label="Review Language"
+  value={settings.general.review_language}
+  onChange={(v) => updateSetting('general', 'review_language', v)}
+/>
                         <TextInput label="Tone Instructions" value={settings.general.tone_instructions} placeholder="e.g., Be formal and professional." onChange={(v) => updateSetting('general', 'tone_instructions', v)} />
                         <Toggle label="Early Access" checked={settings.general.early_access} onChange={(v) => updateSetting('general', 'early_access', v)} />
                         <Toggle label="Enable Free Tier" checked={settings.general.enable_free_tier} onChange={(v) => updateSetting('general', 'enable_free_tier', v)} />

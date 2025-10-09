@@ -172,19 +172,19 @@ const App: React.FC = () => {
             </div>
             <ul className="space-y-2">
               <NavItem
-                page={Page.DASHBOARD}
-                icon={<DashboardIcon />}
-                label={Page.DASHBOARD}
-                isActive={currentPage === Page.DASHBOARD}
-                onClick={handlePageChange}
-              />
-              <NavItem
                 page={Page.REPOSITORIES}
                 icon={<RepoIcon />}
                 label={Page.REPOSITORIES}
                 isActive={
                   currentPage === Page.REPOSITORIES || currentPage === Page.REPOSITORY_SETTINGS
                 }
+                onClick={handlePageChange}
+              />
+              <NavItem
+                page={Page.DASHBOARD}
+                icon={<DashboardIcon />}
+                label={Page.DASHBOARD}
+                isActive={currentPage === Page.DASHBOARD}
                 onClick={handlePageChange}
               />
               <NavItem
