@@ -5,6 +5,7 @@ import RepositoriesPage from './pages/RepositoriesPage';
 import RepositorySettingsPage from './pages/RepositorySettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
+import './index.css';
 import {
   DashboardIcon,
   RepoIcon,

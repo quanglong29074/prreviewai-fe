@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Repository, AllRepositorySettings, ActiveStatus, ScopeStatus, ProfileSettingType, ToolLanguageLevelSetting, PhpStanLevelSetting } from '../types';
 import Spinner from '../components/Spinner';
+import toast from 'react-hot-toast';
 
 const defaultSettings: AllRepositorySettings = {
     general: {
@@ -342,15 +343,11 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
 
             await Promise.all(savePromises);
             
-            setSaveSuccess(true);
             setHasChanges(false);
-            setTimeout(() => setSaveSuccess(false), 3000);
+            toast.success('Settings saved successfully!');
+
         } catch (e) {
-            if (e instanceof Error) {
-                setError(`Failed to save settings: ${e.message}`);
-            } else {
-                setError('An unknown error occurred while saving settings.');
-            }
+            toast.error(`Failed to save settings: ${e.message}`);
         } finally {
             setSaving(false);
         }
@@ -546,12 +543,35 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
-            <div className="p-4 sm:p-6 md:p-8 pb-4 flex-shrink-0">
-                <button onClick={onBack} className="text-sm text-sky-400 hover:text-sky-300 mb-2 transition-colors">&larr; Back to Repositories</button>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-2 break-words">{repository.full_name}</h1>
-                <p className="text-slate-400">Manage settings for your repository.</p>
-            </div>
+       <div className="h-full overflow-hidden flex flex-col">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 md:p-8 pb-4 flex-shrink-0">
+    {/* Left side: Back + Title */}
+    <div className="flex flex-col flex-1 min-w-0">
+        <button
+            onClick={onBack}
+            className="text-sm text-sky-400 hover:text-sky-300 mb-2 transition-colors text-left"
+        >
+            &larr; Back to Repositories
+        </button>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-400 pb-1 break-words">
+            {repository.full_name}
+        </h1>
+        <p className="text-slate-400 text-sm sm:text-base">Manage settings for your repository.</p>
+    </div>
+
+    {/* Right side: Save button */}
+    <div className="flex-shrink-0">
+        <button
+            onClick={saveAllSettings}
+            disabled={saving || !hasChanges}
+            className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white font-medium px-4 py-2 rounded-lg shadow-md transition"
+        >
+            {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+    </div>
+</div>
+
 
             <div className="flex-grow flex flex-col lg:flex-row gap-8 px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 overflow-hidden">
                 <aside className="lg:w-56 flex-shrink-0">
@@ -571,46 +591,6 @@ const RepositorySettingsPage: React.FC<RepositorySettingsPageProps> = ({ reposit
                 <main className="flex-1 min-w-0 overflow-y-auto pr-2 custom-scrollbar pb-20">
                     {renderSettingsPanel()}
                 </main>
-            </div>
-
-            <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 p-4 flex-shrink-0 z-10">
-                <div className="flex items-center justify-between max-w-6xl mx-auto">
-                    <div>
-                        {saveSuccess && (
-                            <span className="text-green-400 text-sm flex items-center">
-                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                All settings saved successfully!
-                            </span>
-                        )}
-                        {hasChanges && !saveSuccess && (
-                            <span className="text-yellow-400 text-sm flex items-center">
-                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                You have unsaved changes
-                            </span>
-                        )}
-                    </div>
-                    <button
-                        onClick={saveAllSettings}
-                        disabled={saving || !hasChanges}
-                        className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                    >
-                        {saving ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Saving All Settings...
-                            </>
-                        ) : (
-                            'Save All Changes'
-                        )}
-                    </button>
-                </div>
             </div>
         </div>
     );

@@ -102,8 +102,8 @@ const DashboardPage: React.FC = () => {
                             <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Repository</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Pull Request</th>
                             <th className="px-6 py-3 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Commits</th>
+                            <th className="px-6 py-3 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Review Comments</th>
                             <th className="px-6 py-3 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Comments</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Last Updated</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
@@ -126,10 +126,8 @@ const DashboardPage: React.FC = () => {
                                         </a>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-300">{pr.commits}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-300">{pr.review_comments}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-300">{pr.comments}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                                        {new Date(pr.updated_at).toLocaleString()}
-                                    </td>
                                 </tr>
                             );
                         })}
