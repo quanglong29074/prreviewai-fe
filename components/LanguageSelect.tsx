@@ -7,14 +7,14 @@ interface LanguageOption {
 }
 
 const LANGUAGE_OPTIONS: LanguageOption[] = [
-  { value: 'vi', label: 'Vietnamese', flag: '🇻🇳' },
-  { value: 'en', label: 'English', flag: '🇺🇸' },
-  { value: 'fr', label: 'French', flag: '🇫🇷' },
-  { value: 'de', label: 'German', flag: '🇩🇪' },
-  { value: 'es', label: 'Spanish', flag: '🇪🇸' },
-  { value: 'jp', label: 'Japanese', flag: '🇯🇵' },
-  { value: 'kr', label: 'Korean', flag: '🇰🇷' },
-  { value: 'cn', label: 'Chinese', flag: '🇨🇳' },
+  { value: 'Vietnamese', label: 'Vietnamese', flag: '🇻🇳' },
+  { value: 'English', label: 'English', flag: '🇺🇸' },
+  { value: 'French', label: 'French', flag: '🇫🇷' },
+  { value: 'German', label: 'German', flag: '🇩🇪' },
+  { value: 'Spanish', label: 'Spanish', flag: '🇪🇸' },
+  { value: 'Japanese', label: 'Japanese', flag: '🇯🇵' },
+  { value: 'Korean', label: 'Korean', flag: '🇰🇷' },
+  { value: 'Chinese', label: 'Chinese', flag: '🇨🇳' },
 ];
 
 interface LanguageSelectProps {

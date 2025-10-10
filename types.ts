@@ -205,3 +205,10 @@ export interface AllRepositorySettings {
     review: ReviewSettings;
     tools: ToolsSettings;
 }
+
+export interface PullRequestSummaryResponse {
+    total_count: number;
+    page: number;
+    per_page: number;
+    data: PullRequestSummary[];
+}
